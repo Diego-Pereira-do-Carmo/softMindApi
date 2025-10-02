@@ -1,0 +1,115 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SoftMindApi.Data;
+using SoftMindApi.DTO;
+using SoftMindApi.Entities;
+
+namespace SoftMindApi.Controllers
+{
+    [Route("api/[controller]")]
+    public class CategoryQuestionnaireController : ControllerBase
+    {
+        private readonly MongoDbContext _context;
+
+        public CategoryQuestionnaireController(MongoDbContext context)
+        {
+            _context = context;
+        }
+
+        [HttpGet]
+        [Route("GetCategoryQuestionnaire")]
+        public async Task<IActionResult> GetCategoryQuestionnaire()
+        {
+            try
+            {
+                List<CategoryQuestionnaire> listCategoryQuestionnaire = await _context.CategoryQuestionnaire.ToListAsync();
+
+                if (listCategoryQuestionnaire == null || listCategoryQuestionnaire.Count == 0)
+                {
+                    return Ok(new { Message = "Nenhum questionario encontrado" });
+                }
+
+                return Ok(listCategoryQuestionnaire);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Erro ao processar a inserção: {ex.Message}");
+            }
+        }
+
+        [HttpPost]
+        [Route("AddResponseQuestionnaire")]
+        public async Task<IActionResult> PostResponseQuestionnaire([FromBody] List<ResponseQuestionnaireDTO> model)
+        {
+            if (model == null || model.Count == 0)
+            {
+                return BadRequest("Respostas inválidas, preencha o questionario");
+            }
+
+            try
+            {
+                List<ResponseQuestionnaire> responseQuestionnaires = new List<ResponseQuestionnaire>();
+                foreach (var response in model)
+                {
+                    var newResponse = new ResponseQuestionnaire
+                    {
+                        pergunta = response.pergunta,
+                        resposta = response.resposta,
+                        Data = DateTime.Now,
+                        UserId = "Colocar o userId"
+                    };
+
+                    responseQuestionnaires.Add(newResponse);
+
+                    await _context.ResponseQuestionnaire.AddAsync(newResponse);
+                    await _context.SaveChangesAsync();
+                }
+
+                return Ok(responseQuestionnaires);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Erro ao processar a inserção: {ex.Message}");
+            }
+
+        }
+
+
+        //[HttpPost]
+        //[Route("AddCategoryQuestionnaire")]
+        //public async Task<IActionResult> PostCategoryQuestionnaire([FromBody] CategoryQuestionnaireDTO model)
+        //{
+        //    if (model == null || string.IsNullOrEmpty(model.Name) || model.Questions == null || model.Questions.Count == 0)
+        //    {
+        //        return BadRequest("O corpo da requisição deve conter o nome da categoria e as perguntas.");
+        //    }
+
+        //    try
+        //    {
+        //        var novaCategoria = new CategoryQuestionnaire
+        //        {
+        //            Name = model.Name,
+        //            Questions = new List<Question>()
+        //        };
+
+        //        foreach (var question in model.Questions)
+        //        {
+        //            novaCategoria.Questions.Add(new Question
+        //            {
+        //                QuestionText = question.QuestionText,
+        //                ResponseOptions = question.ResponseOptions
+        //            });
+        //        }
+
+        //        await _context.CategoryQuestionnaire.AddAsync(novaCategoria);
+        //        await _context.SaveChangesAsync();
+
+        //        return Ok(novaCategoria);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest($"Erro ao processar a inserção: {ex.Message}");
+        //    }
+        //}
+    }
+}

@@ -1,0 +1,6 @@
+@SoftMindApi_HostAddress = http://localhost:5094
+
+GET {{SoftMindApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
