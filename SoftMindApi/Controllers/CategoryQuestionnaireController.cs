@@ -39,7 +39,7 @@ namespace SoftMindApi.Controllers
 
         [HttpPost]
         [Route("AddResponseQuestionnaire")]
-        public async Task<IActionResult> PostResponseQuestionnaire([FromBody] List<ResponseQuestionnaireDTO> model)
+        public async Task<IActionResult> PostResponseQuestionnaire([FromHeader(Name = "x-device-id")] string anonymousUserId, [FromBody] List<ResponseQuestionnaireDTO> model)
         {
             if (model == null || model.Count == 0)
             {
@@ -48,7 +48,7 @@ namespace SoftMindApi.Controllers
 
             try
             {
-                List<ResponseQuestionnaire> responseQuestionnaires = new List<ResponseQuestionnaire>();
+                List<ResponseQuestionnaire> responsesToSave = new List<ResponseQuestionnaire>();
                 foreach (var response in model)
                 {
                     var newResponse = new ResponseQuestionnaire
@@ -56,16 +56,16 @@ namespace SoftMindApi.Controllers
                         pergunta = response.pergunta,
                         resposta = response.resposta,
                         Data = DateTime.Now,
-                        UserId = "Colocar o userId"
+                        UserId = anonymousUserId
                     };
 
-                    responseQuestionnaires.Add(newResponse);
-
-                    await _context.ResponseQuestionnaire.AddAsync(newResponse);
-                    await _context.SaveChangesAsync();
+                    responsesToSave.Add(newResponse);
                 }
 
-                return Ok(responseQuestionnaires);
+                await _context.ResponseQuestionnaire.AddRangeAsync(responsesToSave);
+                await _context.SaveChangesAsync();
+
+                return Ok(responsesToSave);
             }
             catch (Exception ex)
             {
