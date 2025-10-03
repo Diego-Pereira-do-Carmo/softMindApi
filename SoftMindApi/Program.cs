@@ -6,6 +6,9 @@ using SoftMindApi.Configuration;
 using SoftMindApi.Data;
 using SoftMindApi.Services;
 using SoftMindApi.Services.Interfaces;
+using SoftMindApi.Services.Interface;
+using SoftMindApi.Repositories.Interface;
+using SoftMindApi.Repositories;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,17 +22,20 @@ builder.Services.AddDbContext<MongoDbContext>(options =>
 
 var jwtSettings = builder.Configuration
     .GetSection("Jwt")
-    .Get<JwtSettings>() ?? throw new InvalidOperationException("JWT settings não configurado no appsettings.json");
+    .Get<JwtSettings>() ?? throw new InvalidOperationException("JWT settings nï¿½o configurado no appsettings.json");
 
 builder.Services.AddSingleton(jwtSettings);
 
 var apiCredentials = builder.Configuration
     .GetSection("ApiCredentials")
-    .Get<ApiCredentials>() ?? throw new InvalidOperationException("API credentials não configuradas no appsettings.json");
+    .Get<ApiCredentials>() ?? throw new InvalidOperationException("API credentials nï¿½o configuradas no appsettings.json");
 
 builder.Services.AddSingleton(apiCredentials);
 
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAlertRepository, AlertRepository>();
+builder.Services.AddScoped<IAlertTemplateRepository, AlertTemplateRepository>();
+builder.Services.AddScoped<IAlertService, AlertService>();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -64,13 +70,13 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "SoftMind API",
         Version = "v1",
-        Description = "API do SoftMind com autenticação JWT"
+        Description = "API do SoftMind com autenticaï¿½ï¿½o JWT"
     });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header usando Bearer scheme. \n\n" +
-                      "Digite 'Bearer' [espaço] e então seu token.\n\n" +
+                      "Digite 'Bearer' [espaï¿½o] e entï¿½o seu token.\n\n" +
                       "Exemplo: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'",
         Name = "Authorization",
         In = ParameterLocation.Header,

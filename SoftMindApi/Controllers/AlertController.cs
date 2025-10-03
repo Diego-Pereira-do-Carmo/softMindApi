@@ -1,10 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MongoDB.Bson;
-using SoftMindApi.Data;
 using SoftMindApi.DTO;
-using SoftMindApi.Entities;
+using SoftMindApi.Services.Interface;
 
 namespace SoftMindApi.Controllers
 {
@@ -13,11 +10,11 @@ namespace SoftMindApi.Controllers
     [Authorize]
     public class AlertController : ControllerBase
     {
-        private readonly MongoDbContext _context;
+        private readonly IAlertService _alertService;
 
-        public AlertController(MongoDbContext context)
+        public AlertController(IAlertService alertService)
         {
-            _context = context;
+            _alertService = alertService;
         }
 
         [HttpGet]
@@ -31,46 +28,12 @@ namespace SoftMindApi.Controllers
 
             try
             {
-                var unreadMessages = await _context.Alert
-                    .Where(a => a.DeviceId == anonymousUserId && !a.IsRead)
-                    .Select(a => a.Message)
-                    .ToListAsync();
-
-                var templates = await _context.AlertTemplates.ToListAsync();
-
-                var availableTemplates = templates
-                    .Where(t => !unreadMessages.Contains(t.Message))
-                    .ToList();
-
-                if (availableTemplates.Count == 0)
+                var alert = await _alertService.GetRandomAlertAsync(anonymousUserId);
+                if (alert == null)
                 {
                     return Ok(new { Message = "Nenhum novo alerta disponível" });
                 }
-
-                var random = new Random();
-                var selectedTemplate = availableTemplates[random.Next(availableTemplates.Count)];
-
-                var newAlert = new Alert
-                {
-                    Id = ObjectId.GenerateNewId().ToString(),
-                    DeviceId = anonymousUserId,
-                    Message = selectedTemplate.Message,
-                    Category = selectedTemplate.Category,
-                    CreatedAt = DateTime.UtcNow,
-                    IsRead = false
-                };
-
-                await _context.Alert.AddAsync(newAlert);
-                await _context.SaveChangesAsync();
-
-                return Ok(new AlertDTO
-                {
-                    Id = newAlert.Id,
-                    Message = newAlert.Message,
-                    Category = newAlert.Category,
-                    CreatedAt = newAlert.CreatedAt,
-                    IsRead = newAlert.IsRead
-                });
+                return Ok(alert);
             }
             catch (Exception ex)
             {
@@ -90,27 +53,12 @@ namespace SoftMindApi.Controllers
 
             try
             {
-                var alerts = await _context.Alert
-                    .Where(a => a.DeviceId == anonymousUserId)
-                    .OrderByDescending(a => a.CreatedAt)
-                    .Take(50)
-                    .ToListAsync();
-
+                var alerts = await _alertService.GetRecentAlertsAsync(anonymousUserId);
                 if (alerts == null || alerts.Count == 0)
                 {
                     return Ok(new { Message = "Nenhum alerta encontrado" });
                 }
-
-                var alertDTOs = alerts.Select(a => new AlertDTO
-                {
-                    Id = a.Id,
-                    Message = a.Message,
-                    Category = a.Category,
-                    CreatedAt = a.CreatedAt,
-                    IsRead = a.IsRead
-                }).ToList();
-
-                return Ok(alertDTOs);
+                return Ok(alerts);
             }
             catch (Exception ex)
             {
@@ -131,18 +79,12 @@ namespace SoftMindApi.Controllers
 
             try
             {
-                var alert = await _context.Alert
-                    .FirstOrDefaultAsync(a => a.Id == dto.AlertId && a.DeviceId == anonymousUserId);
-
-                if (alert == null)
+                var updated = await _alertService.MarkAsReadAsync(anonymousUserId, dto.AlertId);
+                if (!updated)
                 {
                     return NotFound("Alerta não encontrado");
                 }
-
-                alert.IsRead = true;
-                await _context.SaveChangesAsync();
-
-                return Ok(new { Message = "Alerta marcado como lido", AlertId = alert.Id });
+                return Ok(new { Message = "Alerta marcado como lido", AlertId = dto.AlertId });
             }
             catch (Exception ex)
             {
@@ -163,27 +105,8 @@ namespace SoftMindApi.Controllers
 
             try
             {
-                var newAlert = new Alert
-                {
-                    Id = ObjectId.GenerateNewId().ToString(),
-                    DeviceId = anonymousUserId,
-                    Message = alertDto.Message,
-                    Category = alertDto.Category,
-                    CreatedAt = DateTime.UtcNow,
-                    IsRead = false
-                };
-
-                await _context.Alert.AddAsync(newAlert);
-                await _context.SaveChangesAsync();
-
-                return Ok(new AlertDTO
-                {
-                    Id = newAlert.Id,
-                    Message = newAlert.Message,
-                    Category = newAlert.Category,
-                    CreatedAt = newAlert.CreatedAt,
-                    IsRead = newAlert.IsRead
-                });
+                var created = await _alertService.CreateAlertAsync(anonymousUserId, alertDto);
+                return Ok(created);
             }
             catch (Exception ex)
             {
