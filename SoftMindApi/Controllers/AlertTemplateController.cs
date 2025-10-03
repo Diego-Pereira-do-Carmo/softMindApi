@@ -1,10 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MongoDB.Bson;
-using SoftMindApi.Data;
 using SoftMindApi.DTO;
-using SoftMindApi.Entities;
+using SoftMindApi.Services.Interface;
 
 namespace SoftMindApi.Controllers
 {
@@ -13,11 +10,11 @@ namespace SoftMindApi.Controllers
     [Authorize]
     public class AlertTemplateController : ControllerBase
     {
-        private readonly MongoDbContext _context;
+        private readonly IAlertTemplateService _service;
 
-        public AlertTemplateController(MongoDbContext context)
+        public AlertTemplateController(IAlertTemplateService service)
         {
-            _context = context;
+            _service = service;
         }
 
         [HttpPost]
@@ -27,37 +24,15 @@ namespace SoftMindApi.Controllers
             if (string.IsNullOrWhiteSpace(dto.Message))
                 return BadRequest("Mensagem inválida");
 
-            var template = new AlertTemplate
-            {
-                Id = ObjectId.GenerateNewId().ToString(),
-                Message = dto.Message,
-                Category = dto.Category
-            };
-
-            await _context.AlertTemplates.AddAsync(template);
-            await _context.SaveChangesAsync();
-
-            return Ok(new AlertTemplateDTO
-            {
-                Id = template.Id!,
-                Message = template.Message,
-                Category = template.Category
-            });
+            var created = await _service.CreateAsync(dto);
+            return Ok(created);
         }
 
         [HttpGet]
         [Route("List")]
         public async Task<IActionResult> List()
         {
-            var templates = await _context.AlertTemplates.ToListAsync();
-
-            var result = templates.Select(t => new AlertTemplateDTO
-            {
-                Id = t.Id!,
-                Message = t.Message,
-                Category = t.Category
-            });
-
+            var result = await _service.ListAsync();
             return Ok(result);
         }
 
@@ -65,13 +40,9 @@ namespace SoftMindApi.Controllers
         [Route("Delete/{id}")]
         public async Task<IActionResult> Delete(string id)
         {
-            var template = await _context.AlertTemplates.FirstOrDefaultAsync(t => t.Id == id);
-
-            if (template == null)
+            var removed = await _service.DeleteAsync(id);
+            if (!removed)
                 return NotFound("Template não encontrado");
-
-            _context.AlertTemplates.Remove(template);
-            await _context.SaveChangesAsync();
 
             return Ok(new { Message = "Template removido com sucesso" });
         }

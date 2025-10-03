@@ -36,6 +36,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAlertRepository, AlertRepository>();
 builder.Services.AddScoped<IAlertTemplateRepository, AlertTemplateRepository>();
 builder.Services.AddScoped<IAlertService, AlertService>();
+builder.Services.AddScoped<IAlertTemplateService, AlertTemplateService>();
 
 builder.Services.AddAuthentication(options =>
 {
