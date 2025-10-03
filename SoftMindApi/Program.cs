@@ -43,6 +43,10 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMoodRepository, MoodRepository>();
 builder.Services.AddScoped<IMoodService, MoodService>();
+builder.Services.AddScoped<IWellnessMessageRepository, WellnessMessageRepository>();
+builder.Services.AddScoped<IWellnessMessageService, WellnessMessageService>();
+builder.Services.AddScoped<IResponseQuestionnaireRepository, ResponseQuestionnaireRepository>();
+builder.Services.AddScoped<ICategoryQuestionnaireService, CategoryQuestionnaireService>();
 
 builder.Services.AddAuthentication(options =>
 {

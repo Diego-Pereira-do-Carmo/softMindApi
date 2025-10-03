@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SoftMindApi.Data;
 using SoftMindApi.DTO;
-using SoftMindApi.Entities;
+using SoftMindApi.Services.Interface;
 
 namespace SoftMindApi.Controllers
 {
@@ -11,11 +9,11 @@ namespace SoftMindApi.Controllers
     [Authorize]
     public class CategoryQuestionnaireController : ControllerBase
     {
-        private readonly MongoDbContext _context;
+        private readonly ICategoryQuestionnaireService _service;
 
-        public CategoryQuestionnaireController(MongoDbContext context)
+        public CategoryQuestionnaireController(ICategoryQuestionnaireService service)
         {
-            _context = context;
+            _service = service;
         }
 
         [HttpGet]
@@ -24,8 +22,7 @@ namespace SoftMindApi.Controllers
         {
             try
             {
-                List<CategoryQuestionnaire> listCategoryQuestionnaire = await _context.CategoryQuestionnaire.ToListAsync();
-
+                var listCategoryQuestionnaire = await _service.GetCategoriesAsync();
                 if (listCategoryQuestionnaire == null || listCategoryQuestionnaire.Count == 0)
                 {
                     return Ok(new { Message = "Nenhum questionario encontrado" });
@@ -48,39 +45,10 @@ namespace SoftMindApi.Controllers
                 return BadRequest("Dados inválido");
             }
 
-            var user = await _context.User.FirstOrDefaultAsync(u => u.DeviceId == anonymousUserId);
-
-            if (user == null)
-            {
-                User newUser = new User
-                {
-                    DeviceId = anonymousUserId,
-                };
-
-                await _context.User.AddAsync(newUser);
-                await _context.SaveChangesAsync();
-            }
-
             try
             {
-                List<ResponseQuestionnaire> responsesToSave = new List<ResponseQuestionnaire>();
-                foreach (var response in model)
-                {
-                    var newResponse = new ResponseQuestionnaire
-                    {
-                        pergunta = response.pergunta,
-                        resposta = response.resposta,
-                        Data = DateTime.Now,
-                        DeviceId = anonymousUserId
-                    };
-
-                    responsesToSave.Add(newResponse);
-                }
-
-                await _context.ResponseQuestionnaire.AddRangeAsync(responsesToSave);
-                await _context.SaveChangesAsync();
-
-                return Ok(responsesToSave);
+                var saved = await _service.AddResponsesAsync(anonymousUserId, model);
+                return Ok(saved);
             }
             catch (Exception ex)
             {
