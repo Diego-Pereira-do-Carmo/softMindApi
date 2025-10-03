@@ -11,6 +11,7 @@ namespace SoftMindApi.Data
         public DbSet<WellnessMessage> WellnessMessages { get; init; }
         public DbSet<User> User { get; init; }
         public DbSet<Mood> Mood { get; init; }
+        public DbSet<Alert> Alert { get; set; }
 
         public MongoDbContext(DbContextOptions options) : base(options)
         {
@@ -29,6 +30,7 @@ namespace SoftMindApi.Data
             modelBuilder.Entity<ResponseQuestionnaire>().ToCollection("ResponseQuestionnaire");
             modelBuilder.Entity<User>().ToCollection("User");
             modelBuilder.Entity<Mood>().ToCollection("Mood");
+            modelBuilder.Entity<Alert>().ToCollection("Alert");
         }
     }
 }
