@@ -24,7 +24,7 @@ namespace SoftMindApi.Controllers
             try
             {
                 var dataInicial = DateTime.UtcNow.AddDays(-7);
-                var moodList = await _context.Mood.Where(m => m.DeviceId == anonymousUserId && m.Data >= dataInicial).ToListAsync();
+                var moodList = await _context.Mood.Where(m => m.DeviceId == anonymousUserId && m.Data >= dataInicial).OrderBy(m => m.Data).ToListAsync();
 
                 if (moodList == null || moodList.Count == 0)
                 {
