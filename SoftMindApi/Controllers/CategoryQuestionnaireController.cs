@@ -41,9 +41,27 @@ namespace SoftMindApi.Controllers
         [Route("AddResponseQuestionnaire")]
         public async Task<IActionResult> PostResponseQuestionnaire([FromHeader(Name = "x-device-id")] string anonymousUserId, [FromBody] List<ResponseQuestionnaireDTO> model)
         {
+            if (string.IsNullOrWhiteSpace(anonymousUserId))
+            {
+                return BadRequest("usuário inválido");
+            }
+
             if (model == null || model.Count == 0)
             {
                 return BadRequest("Respostas inválidas, preencha o questionario");
+            }
+
+            var user = await _context.User.FirstOrDefaultAsync(u => u.DeviceId == anonymousUserId);
+
+            if (user == null)
+            {
+                User newUser = new User
+                {
+                    DeviceId = anonymousUserId,
+                };
+
+                await _context.User.AddAsync(newUser);
+                await _context.SaveChangesAsync();
             }
 
             try

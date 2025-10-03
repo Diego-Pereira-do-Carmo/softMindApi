@@ -8,6 +8,6 @@ namespace SoftMindApi.Entities
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public ObjectId Id { get; set; }
-        public string AndroidId { get; set; }
+        public string? DeviceId { get; set; }
     }
 }
