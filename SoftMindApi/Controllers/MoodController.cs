@@ -54,16 +54,18 @@ namespace SoftMindApi.Controllers
             {
                 var user = await _context.User.FirstOrDefaultAsync(u => u.DeviceId == anonymousUserId);
 
-                //if (user == null)
-                //{
-                //    User newUser = new User
-                //    {
-                //        DeviceId = anonymousUserId,
-                //    };
+                if (user == null)
+                {
+                    User newUser = new User
+                    {
+                        DeviceId = anonymousUserId,
+                    };
 
-                //    await _context.User.AddAsync(newUser);
-                //    await _context.SaveChangesAsync();
-                //}
+                    await _context.User.AddAsync(newUser);
+                    await _context.SaveChangesAsync();
+
+                    user = newUser;
+                }
 
                 var newMood = new Mood
                 {
