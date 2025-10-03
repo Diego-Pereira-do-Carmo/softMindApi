@@ -18,6 +18,72 @@ namespace SoftMindApi.Controllers
             _context = context;
         }
 
+        // GET: Gera e retorna um alerta randomizado da biblioteca
+        [HttpGet]
+        [Route("GetRandomAlert")]
+        public async Task<IActionResult> GetRandomAlert([FromHeader(Name = "x-device-id")] string anonymousUserId)
+        {
+            if (string.IsNullOrWhiteSpace(anonymousUserId))
+            {
+                return BadRequest("DeviceId inválido");
+            }
+
+            try
+            {
+                // Busca os ids dos alertas ainda não lidos pelo usuário
+                var unreadMessages = await _context.Alert
+                    .Where(a => a.DeviceId == anonymousUserId && !a.IsRead)
+                    .Select(a => a.Message)
+                    .ToListAsync();
+
+                // Busca todos os templates disponíveis
+                var templates = await _context.AlertTemplates.ToListAsync();
+
+                // Filtra os que o usuário ainda não tem não lido
+                var availableTemplates = templates
+                    .Where(t => !unreadMessages.Contains(t.Message))
+                    .ToList();
+
+                if (availableTemplates.Count == 0)
+                {
+                    return Ok(new { Message = "Nenhum novo alerta disponível" });
+                }
+
+                // Sorteia randomicamente
+                var random = new Random();
+                var selectedTemplate = availableTemplates[random.Next(availableTemplates.Count)];
+
+                // Cria o alerta real para o usuário
+                var newAlert = new Alert
+                {
+                    Id = ObjectId.GenerateNewId().ToString(),
+                    DeviceId = anonymousUserId,
+                    Message = selectedTemplate.Message,
+                    Category = selectedTemplate.Category,
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
+                };
+
+                await _context.Alert.AddAsync(newAlert);
+                await _context.SaveChangesAsync();
+
+                // Retorna para o app
+                return Ok(new AlertDTO
+                {
+                    Id = newAlert.Id,
+                    Message = newAlert.Message,
+                    Category = newAlert.Category,
+                    CreatedAt = newAlert.CreatedAt,
+                    IsRead = newAlert.IsRead
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Erro ao processar: {ex.Message}");
+            }
+        }
+
+
         // GET: Buscar alertas recentes do usuário
         [HttpGet]
         [Route("GetRecentAlerts")]
