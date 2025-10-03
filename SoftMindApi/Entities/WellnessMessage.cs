@@ -20,7 +20,7 @@ namespace SoftMindApi.Entities
 
     public class WellnessReadStat
     {
-        public string DeviceId { get; set; } = string.Empty; // Android ID / device identifier as string
+        public string DeviceId { get; set; } = string.Empty;
         public int Count { get; set; } = 0;
         public DateTime LastReadAt { get; set; } = DateTime.MinValue;
     }

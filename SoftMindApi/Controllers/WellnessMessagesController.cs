@@ -19,7 +19,6 @@ namespace SoftMindApi.Controllers
             _context = context;
         }
 
-        // Resolve Brazil timezone in Linux/Windows; fallback to local if not found
         private static TimeZoneInfo GetBrazilTimeZone()
         {
             try { return TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo"); } catch { }
@@ -27,11 +26,6 @@ namespace SoftMindApi.Controllers
             return TimeZoneInfo.Local;
         }
 
-        /// <summary>
-        /// Returns up to 5 random active wellness messages and records the read for this device.
-        /// Device id is read from the X-Device-Id header (Android ID).
-        /// </summary>
-        /// <param name="deviceId">Android ID from header X-Device-Id</param>
         [HttpGet("GetRandom")]
         public async Task<IActionResult> GetRandom(
             [FromHeader(Name = "x-device-id")] string? deviceId)
@@ -41,7 +35,6 @@ namespace SoftMindApi.Controllers
                 return BadRequest("Missing device id. Provide X-Device-Id header.");
             }
 
-            // Normalize to lowercase to avoid case-sensitive duplicates
             var deviceKey = deviceId.Trim().ToLowerInvariant();
 
             try
@@ -58,7 +51,6 @@ namespace SoftMindApi.Controllers
                     return NoContent();
                 }
 
-                // Shuffle and take up to 5
                 var random = new Random();
                 var chosenList = allActive
                     .OrderBy(_ => random.Next())

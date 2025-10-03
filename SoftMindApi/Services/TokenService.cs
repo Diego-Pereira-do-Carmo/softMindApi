@@ -31,7 +31,6 @@ public class TokenService : ITokenService
                     DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
             };
 
-            // Adicionar Android ID se fornecido
             if (!string.IsNullOrEmpty(androidId))
             {
                 claims.Add(new Claim("android_id", androidId));

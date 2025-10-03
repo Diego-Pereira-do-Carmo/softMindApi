@@ -87,43 +87,5 @@ namespace SoftMindApi.Controllers
                 return BadRequest($"Erro ao processar a inserção: {ex.Message}");
             }
         }
-
-
-        //[HttpPost]
-        //[Route("AddCategoryQuestionnaire")]
-        //public async Task<IActionResult> PostCategoryQuestionnaire([FromBody] CategoryQuestionnaireDTO model)
-        //{
-        //    if (model == null || string.IsNullOrEmpty(model.Name) || model.Questions == null || model.Questions.Count == 0)
-        //    {
-        //        return BadRequest("O corpo da requisição deve conter o nome da categoria e as perguntas.");
-        //    }
-
-        //    try
-        //    {
-        //        var novaCategoria = new CategoryQuestionnaire
-        //        {
-        //            Name = model.Name,
-        //            Questions = new List<Question>()
-        //        };
-
-        //        foreach (var question in model.Questions)
-        //        {
-        //            novaCategoria.Questions.Add(new Question
-        //            {
-        //                QuestionText = question.QuestionText,
-        //                ResponseOptions = question.ResponseOptions
-        //            });
-        //        }
-
-        //        await _context.CategoryQuestionnaire.AddAsync(novaCategoria);
-        //        await _context.SaveChangesAsync();
-
-        //        return Ok(novaCategoria);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest($"Erro ao processar a inserção: {ex.Message}");
-        //    }
-        //}
     }
 }

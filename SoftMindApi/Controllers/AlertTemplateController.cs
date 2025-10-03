@@ -20,7 +20,6 @@ namespace SoftMindApi.Controllers
             _context = context;
         }
 
-        // POST: Criar novo template de alerta
         [HttpPost]
         [Route("Create")]
         public async Task<IActionResult> Create([FromBody] CreateAlertTemplateDTO dto)
@@ -46,7 +45,6 @@ namespace SoftMindApi.Controllers
             });
         }
 
-        // GET: Listar todos os templates
         [HttpGet]
         [Route("List")]
         public async Task<IActionResult> List()
@@ -63,7 +61,6 @@ namespace SoftMindApi.Controllers
             return Ok(result);
         }
 
-        // DELETE: Remover template
         [HttpDelete]
         [Route("Delete/{id}")]
         public async Task<IActionResult> Delete(string id)

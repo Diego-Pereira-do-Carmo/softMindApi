@@ -25,11 +25,6 @@ public class AuthController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>
-    /// Login único para todos os apps mobile
-    /// </summary>
-    /// <param name="request">Credenciais de login</param>
-    /// <returns>Token JWT</returns>
     [HttpPost("login")]
     [ProducesResponseType(typeof(TokenResponseDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -43,7 +38,6 @@ public class AuthController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            // Validar credenciais fixas
             if (request.Username != _credentials.Username ||
                 request.Password != _credentials.Password)
             {
@@ -61,7 +55,6 @@ public class AuthController : ControllerBase
                     : ""
             );
 
-            // Gerar token (opcionalmente com Android ID para tracking)
             var token = _tokenService.GenerateToken(request.AndroidId);
             var expiresAt = DateTime.UtcNow.AddDays(365);
 
@@ -82,10 +75,6 @@ public class AuthController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Renova o token JWT atual
-    /// </summary>
-    /// <returns>Novo token JWT</returns>
     [HttpPost("refresh")]
     [Authorize]
     [ProducesResponseType(typeof(TokenResponseDTO), StatusCodes.Status200OK)]
@@ -116,10 +105,6 @@ public class AuthController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Verifica se o token atual é válido
-    /// </summary>
-    /// <returns>Informações do token</returns>
     [HttpGet("verify")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]

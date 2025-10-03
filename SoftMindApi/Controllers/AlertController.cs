@@ -20,7 +20,6 @@ namespace SoftMindApi.Controllers
             _context = context;
         }
 
-        // GET: Gera e retorna um alerta randomizado da biblioteca
         [HttpGet]
         [Route("GetRandomAlert")]
         public async Task<IActionResult> GetRandomAlert([FromHeader(Name = "x-device-id")] string anonymousUserId)
@@ -32,16 +31,13 @@ namespace SoftMindApi.Controllers
 
             try
             {
-                // Busca os ids dos alertas ainda não lidos pelo usuário
                 var unreadMessages = await _context.Alert
                     .Where(a => a.DeviceId == anonymousUserId && !a.IsRead)
                     .Select(a => a.Message)
                     .ToListAsync();
 
-                // Busca todos os templates disponíveis
                 var templates = await _context.AlertTemplates.ToListAsync();
 
-                // Filtra os que o usuário ainda não tem não lido
                 var availableTemplates = templates
                     .Where(t => !unreadMessages.Contains(t.Message))
                     .ToList();
@@ -51,11 +47,9 @@ namespace SoftMindApi.Controllers
                     return Ok(new { Message = "Nenhum novo alerta disponível" });
                 }
 
-                // Sorteia randomicamente
                 var random = new Random();
                 var selectedTemplate = availableTemplates[random.Next(availableTemplates.Count)];
 
-                // Cria o alerta real para o usuário
                 var newAlert = new Alert
                 {
                     Id = ObjectId.GenerateNewId().ToString(),
@@ -69,7 +63,6 @@ namespace SoftMindApi.Controllers
                 await _context.Alert.AddAsync(newAlert);
                 await _context.SaveChangesAsync();
 
-                // Retorna para o app
                 return Ok(new AlertDTO
                 {
                     Id = newAlert.Id,
@@ -86,7 +79,6 @@ namespace SoftMindApi.Controllers
         }
 
 
-        // GET: Buscar alertas recentes do usuário
         [HttpGet]
         [Route("GetRecentAlerts")]
         public async Task<IActionResult> GetRecentAlerts([FromHeader(Name = "x-device-id")] string anonymousUserId)
@@ -126,7 +118,6 @@ namespace SoftMindApi.Controllers
             }
         }
 
-        // POST: Marcar alerta como lido
         [HttpPost]
         [Route("MarkAsRead")]
         public async Task<IActionResult> MarkAsRead(
@@ -159,7 +150,6 @@ namespace SoftMindApi.Controllers
             }
         }
 
-        // POST: Criar novo alerta (útil para testes ou sistema automatizado)
         [HttpPost]
         [Route("CreateAlert")]
         public async Task<IActionResult> CreateAlert(

@@ -10,7 +10,6 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ===== CONFIGURAÇÃO MONGODB (EXISTENTE) =====
 var connectionString = builder.Configuration.GetConnectionString("ConnectionString");
 var databaseName = builder.Configuration.GetConnectionString("DatabaseName");
 builder.Services.AddDbContext<MongoDbContext>(options =>
@@ -18,7 +17,6 @@ builder.Services.AddDbContext<MongoDbContext>(options =>
     options.UseMongoDB(connectionString, databaseName);
 });
 
-// ===== CONFIGURAÇÃO JWT (NOVO) =====
 var jwtSettings = builder.Configuration
     .GetSection("Jwt")
     .Get<JwtSettings>() ?? throw new InvalidOperationException("JWT settings não configurado no appsettings.json");
@@ -31,10 +29,8 @@ var apiCredentials = builder.Configuration
 
 builder.Services.AddSingleton(apiCredentials);
 
-// Registrar serviço de token
 builder.Services.AddScoped<ITokenService, TokenService>();
 
-// ===== CONFIGURAR AUTENTICAÇÃO JWT (NOVO) =====
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -53,17 +49,15 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(jwtSettings.Key)
         ),
-        ClockSkew = TimeSpan.Zero // Remove atraso padrão de 5 minutos
+        ClockSkew = TimeSpan.Zero
     };
 });
 
 builder.Services.AddAuthorization();
 
-// ===== CONFIGURAÇÕES EXISTENTES =====
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// ===== SWAGGER COM SUPORTE JWT (ATUALIZADO) =====
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -73,7 +67,6 @@ builder.Services.AddSwaggerGen(c =>
         Description = "API do SoftMind com autenticação JWT"
     });
 
-    // Configurar autenticação JWT no Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header usando Bearer scheme. \n\n" +
@@ -103,7 +96,6 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// ===== PIPELINE HTTP =====
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -111,11 +103,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-// ===== IMPORTANTE: ADICIONAR AUTENTICAÇÃO (NOVO) =====
-app.UseAuthentication(); // Deve vir ANTES do UseAuthorization()
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
