@@ -47,6 +47,7 @@ builder.Services.AddScoped<IWellnessMessageRepository, WellnessMessageRepository
 builder.Services.AddScoped<IWellnessMessageService, WellnessMessageService>();
 builder.Services.AddScoped<IResponseQuestionnaireRepository, ResponseQuestionnaireRepository>();
 builder.Services.AddScoped<ICategoryQuestionnaireService, CategoryQuestionnaireService>();
+builder.Services.AddScoped<ICategoryQuestionnaireRepository, CategoryQuestionnaireRepository>();
 
 builder.Services.AddAuthentication(options =>
 {
