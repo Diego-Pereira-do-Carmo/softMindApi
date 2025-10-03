@@ -1,10 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SoftMindApi.Data;
-using SoftMindApi.DTO;
-using SoftMindApi.Entities;
-using System.Xml.Linq;
+using SoftMindApi.Services.Interface;
 
 namespace SoftMindApi.Controllers
 {
@@ -12,11 +8,11 @@ namespace SoftMindApi.Controllers
     [Authorize]
     public class MoodController : ControllerBase
     {
-        private readonly MongoDbContext _context;
+        private readonly IMoodService _moodService;
 
-        public MoodController(MongoDbContext context)
+        public MoodController(IMoodService moodService)
         {
-            _context = context;
+            _moodService = moodService;
         }
 
         [HttpGet]
@@ -25,14 +21,11 @@ namespace SoftMindApi.Controllers
         {
             try
             {
-                var dataInicial = DateTime.UtcNow.AddDays(-7);
-                var moodList = await _context.Mood.Where(m => m.DeviceId == anonymousUserId && m.Data >= dataInicial).OrderBy(m => m.Data).ToListAsync();
-
+                var moodList = await _moodService.GetMoodLastSevenDaysAsync(anonymousUserId);
                 if (moodList == null || moodList.Count == 0)
                 {
                     return Ok(new { Message = "Nenhum registro encontrado" });
                 }
-
                 return Ok(moodList);
             }
             catch (Exception ex)
@@ -52,31 +45,7 @@ namespace SoftMindApi.Controllers
 
             try
             {
-                var user = await _context.User.FirstOrDefaultAsync(u => u.DeviceId == anonymousUserId);
-
-                if (user == null)
-                {
-                    User newUser = new User
-                    {
-                        DeviceId = anonymousUserId,
-                    };
-
-                    await _context.User.AddAsync(newUser);
-                    await _context.SaveChangesAsync();
-
-                    user = newUser;
-                }
-
-                var newMood = new Mood
-                {
-                    Name = emojiName,
-                    DeviceId = user.DeviceId,
-                    Data = DateTime.Now,
-                };
-
-                await _context.Mood.AddRangeAsync(newMood);
-                await _context.SaveChangesAsync();
-
+                var newMood = await _moodService.AddMoodAsync(anonymousUserId, emojiName);
                 return Ok(newMood);
             }
             catch (Exception ex)

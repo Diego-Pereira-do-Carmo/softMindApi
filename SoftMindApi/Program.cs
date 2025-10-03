@@ -41,6 +41,8 @@ builder.Services.AddScoped<IAlertService, AlertService>();
 builder.Services.AddScoped<IAlertTemplateService, AlertTemplateService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IMoodRepository, MoodRepository>();
+builder.Services.AddScoped<IMoodService, MoodService>();
 
 builder.Services.AddAuthentication(options =>
 {
