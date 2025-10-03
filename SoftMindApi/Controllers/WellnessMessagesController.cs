@@ -26,7 +26,7 @@ namespace SoftMindApi.Controllers
         }
 
         /// <summary>
-        /// Returns a random active wellness message and records the read for this device.
+        /// Returns up to 5 random active wellness messages and records the read for this device.
         /// Device id is read from the X-Device-Id header (Android ID).
         /// </summary>
         /// <param name="deviceId">Android ID from header X-Device-Id</param>
@@ -51,42 +51,44 @@ namespace SoftMindApi.Controllers
                     .Where(w => w.Active)
                     .ToListAsync();
 
-                // No 7-day filter for now: any active message is a candidate
-                var candidates = allActive;
-
-                if (candidates.Count == 0)
+                if (allActive.Count == 0)
                 {
                     return NoContent();
                 }
 
+                // Shuffle and take up to 5
                 var random = new Random();
-                var chosen = candidates[random.Next(candidates.Count)];
+                var chosenList = allActive
+                    .OrderBy(_ => random.Next())
+                    .Take(5)
+                    .ToList();
 
-                var readStat = chosen.ReadStats.FirstOrDefault(s => s.DeviceId == deviceKey);
-                if (readStat == null)
+                foreach (var chosen in chosenList)
                 {
-                    chosen.ReadStats.Add(new WellnessReadStat
+                    var readStat = chosen.ReadStats.FirstOrDefault(s => s.DeviceId == deviceKey);
+                    if (readStat == null)
                     {
-                        DeviceId = deviceKey,
-                        Count = 1,
-                        LastReadAt = nowBr
-                    });
-                }
-                else
-                {
-                    readStat.Count += 1;
-                    readStat.LastReadAt = nowBr;
+                        chosen.ReadStats.Add(new WellnessReadStat
+                        {
+                            DeviceId = deviceKey,
+                            Count = 1,
+                            LastReadAt = nowBr
+                        });
+                    }
+                    else
+                    {
+                        readStat.Count += 1;
+                        readStat.LastReadAt = nowBr;
+                    }
                 }
 
                 await _context.SaveChangesAsync();
 
-                var dto = new WellnessMessageDTO
-                {
-                    Id = chosen.Id.ToString(),
-                    Name = chosen.Name
-                };
+                var dtoList = chosenList
+                    .Select(c => new WellnessMessageDTO { Id = c.Id.ToString(), Name = c.Name })
+                    .ToList();
 
-                return Ok(dto);
+                return Ok(dtoList);
             }
             catch (Exception ex)
             {
