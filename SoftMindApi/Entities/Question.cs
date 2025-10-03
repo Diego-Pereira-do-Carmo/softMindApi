@@ -6,7 +6,6 @@ namespace SoftMindApi.Entities
     public class Question
     {
         public string? QuestionText { get; set; }
-
         public List<string>? ResponseOptions { get; set; }
     }
 }

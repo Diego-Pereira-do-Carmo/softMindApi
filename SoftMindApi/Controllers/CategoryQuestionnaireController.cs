@@ -33,7 +33,7 @@ namespace SoftMindApi.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest($"Erro ao processar a inserção: {ex.Message}");
+                return BadRequest($"Ocorreu um erro interno: {ex.Message}");
             }
         }
 
@@ -41,14 +41,9 @@ namespace SoftMindApi.Controllers
         [Route("AddResponseQuestionnaire")]
         public async Task<IActionResult> PostResponseQuestionnaire([FromHeader(Name = "x-device-id")] string anonymousUserId, [FromBody] List<ResponseQuestionnaireDTO> model)
         {
-            if (string.IsNullOrWhiteSpace(anonymousUserId))
+            if (string.IsNullOrWhiteSpace(anonymousUserId) || model == null || model.Count == 0)
             {
-                return BadRequest("usuário inválido");
-            }
-
-            if (model == null || model.Count == 0)
-            {
-                return BadRequest("Respostas inválidas, preencha o questionario");
+                return BadRequest("Dados inválido");
             }
 
             var user = await _context.User.FirstOrDefaultAsync(u => u.DeviceId == anonymousUserId);
@@ -74,7 +69,7 @@ namespace SoftMindApi.Controllers
                         pergunta = response.pergunta,
                         resposta = response.resposta,
                         Data = DateTime.Now,
-                        UserId = anonymousUserId
+                        DeviceId = anonymousUserId
                     };
 
                     responsesToSave.Add(newResponse);
@@ -89,7 +84,6 @@ namespace SoftMindApi.Controllers
             {
                 return BadRequest($"Erro ao processar a inserção: {ex.Message}");
             }
-
         }
 
 
