@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SoftMindApi.Data;
@@ -8,6 +9,7 @@ namespace SoftMindApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class WellnessMessagesController : ControllerBase
     {
         private readonly MongoDbContext _context;

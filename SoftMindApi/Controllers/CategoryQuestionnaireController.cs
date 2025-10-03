@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SoftMindApi.Data;
 using SoftMindApi.DTO;
@@ -7,6 +8,7 @@ using SoftMindApi.Entities;
 namespace SoftMindApi.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     public class CategoryQuestionnaireController : ControllerBase
     {
         private readonly MongoDbContext _context;

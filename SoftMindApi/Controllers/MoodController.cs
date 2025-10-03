@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SoftMindApi.Data;
 using SoftMindApi.DTO;
@@ -8,6 +9,7 @@ using System.Xml.Linq;
 namespace SoftMindApi.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     public class MoodController : ControllerBase
     {
         private readonly MongoDbContext _context;
