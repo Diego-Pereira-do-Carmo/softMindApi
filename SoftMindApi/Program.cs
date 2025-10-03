@@ -13,8 +13,10 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("ConnectionString");
-var databaseName = builder.Configuration.GetConnectionString("DatabaseName");
+var connectionString = builder.Configuration.GetConnectionString("ConnectionString")
+    ?? throw new InvalidOperationException("ConnectionString não configurada no appsettings.json");
+var databaseName = builder.Configuration.GetConnectionString("DatabaseName")
+    ?? throw new InvalidOperationException("DatabaseName não configurado no appsettings.json");
 builder.Services.AddDbContext<MongoDbContext>(options =>
 {
     options.UseMongoDB(connectionString, databaseName);
@@ -37,6 +39,8 @@ builder.Services.AddScoped<IAlertRepository, AlertRepository>();
 builder.Services.AddScoped<IAlertTemplateRepository, AlertTemplateRepository>();
 builder.Services.AddScoped<IAlertService, AlertService>();
 builder.Services.AddScoped<IAlertTemplateService, AlertTemplateService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddAuthentication(options =>
 {
