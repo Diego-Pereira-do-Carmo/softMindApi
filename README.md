@@ -69,6 +69,36 @@ dotnet run --project SoftMindApi/SoftMindApi.csproj
 Ambiente Development expõe Swagger em `/swagger`.
 
 
+## Testes
+
+Projeto de testes: `SoftMindApi.Tests`
+
+Stack de testes
+- xUnit (framework de testes)
+- Moq (mocks)
+- FluentAssertions (asserts fluentes)
+- coverlet.collector (cobertura)
+
+Executar testes com cobertura
+```
+dotnet test SoftMindApi.Tests --collect:"XPlat Code Coverage"
+```
+
+Onde encontrar a cobertura
+- Um arquivo Cobertura XML é gerado em:
+	- `SoftMindApi.Tests/TestResults/<GUID>/coverage.cobertura.xml`
+
+Relatório HTML (opcional)
+```
+dotnet tool install -g dotnet-reportgenerator-globaltool
+reportgenerator \
+	-reports:SoftMindApi.Tests/TestResults/**/coverage.cobertura.xml \
+	-targetdir:coveragereport \
+	-reporttypes:Html
+
+# Abra coveragereport/index.html no navegador
+```
+
 ## Configuração (appsettings)
 
 `SoftMindApi/appsettings.json`
