@@ -22,14 +22,7 @@ namespace SoftMindApi.Repositories
 
         public async Task<List<CategoryQuestionnaire>> GetCategoryQuestionnaires()
         {
-            try
-            {
-                return await _context.CategoryQuestionnaire.ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
+            return await _context.CategoryQuestionnaire.ToListAsync();
         }
     }
 }

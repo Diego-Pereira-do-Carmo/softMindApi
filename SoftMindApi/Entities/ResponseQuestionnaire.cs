@@ -9,10 +9,10 @@ namespace SoftMindApi.Entities
         [BsonRepresentation(BsonType.ObjectId)]
         public ObjectId Id { get; set; }
 
-        public string DeviceId { get; set; }
+        public string DeviceId { get; set; } = string.Empty;
 
-        public string pergunta { get; set; }
-        public string resposta { get; set; }
+        public string pergunta { get; set; } = string.Empty;
+        public string resposta { get; set; } = string.Empty;
         public DateTime Data { get; set; }
     }
 }

@@ -2,7 +2,7 @@
 {
     public class ResponseQuestionnaireDTO
     {
-        public string pergunta { get; set; }
-        public string resposta { get; set; }
+        public string pergunta { get; set; } = string.Empty;
+        public string resposta { get; set; } = string.Empty;
     }
 }

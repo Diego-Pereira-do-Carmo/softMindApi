@@ -2,8 +2,8 @@
 {
     public class MoodDTO
     {
-        public string Name { get; set; }
-        public string DeviceId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string DeviceId { get; set; } = string.Empty;
         public DateTime Data { get; set; }
     }
 }
