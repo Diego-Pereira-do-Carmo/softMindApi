@@ -119,9 +119,9 @@ jobs:
         run: ./scripts/smoke-tests.sh
         env:
           SMOKE_BASE_URL: ${{ secrets.STAGING_SMOKE_URL }}
-          SMOKE_USERNAME: ${{ coalesce(secrets.STAGING_SMOKE_USERNAME, secrets.SMOKE_USERNAME) }}
-          SMOKE_PASSWORD: ${{ coalesce(secrets.STAGING_SMOKE_PASSWORD, secrets.SMOKE_PASSWORD) }}
-          SMOKE_DEVICE_ID: ${{ coalesce(secrets.STAGING_SMOKE_DEVICE_ID, secrets.SMOKE_DEVICE_ID) }}
+          SMOKE_USERNAME: ${{ secrets.STAGING_SMOKE_USERNAME }}
+          SMOKE_PASSWORD: ${{ secrets.STAGING_SMOKE_PASSWORD }}
+          SMOKE_DEVICE_ID: ${{ secrets.STAGING_SMOKE_DEVICE_ID }}
           SMOKE_ANDROID_ID: ${{ secrets.SMOKE_ANDROID_ID }}
 
   deploy_production:
@@ -154,7 +154,7 @@ jobs:
         run: ./scripts/smoke-tests.sh
         env:
           SMOKE_BASE_URL: ${{ secrets.PRODUCTION_SMOKE_URL }}
-          SMOKE_USERNAME: ${{ coalesce(secrets.PRODUCTION_SMOKE_USERNAME, secrets.SMOKE_USERNAME) }}
-          SMOKE_PASSWORD: ${{ coalesce(secrets.PRODUCTION_SMOKE_PASSWORD, secrets.SMOKE_PASSWORD) }}
-          SMOKE_DEVICE_ID: ${{ coalesce(secrets.PRODUCTION_SMOKE_DEVICE_ID, secrets.SMOKE_DEVICE_ID) }}
+          SMOKE_USERNAME: ${{ secrets.PRODUCTION_SMOKE_USERNAME }}
+          SMOKE_PASSWORD: ${{ secrets.PRODUCTION_SMOKE_PASSWORD }}
+          SMOKE_DEVICE_ID: ${{ secrets.PRODUCTION_SMOKE_DEVICE_ID }}
           SMOKE_ANDROID_ID: ${{ secrets.SMOKE_ANDROID_ID }}
