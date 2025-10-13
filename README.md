@@ -68,6 +68,44 @@ dotnet run --project SoftMindApi/SoftMindApi.csproj
 
 Ambiente Development expõe Swagger em `/swagger`.
 
+## Como executar localmente com Docker
+
+1. Copie o arquivo `.env.example` para `.env` e confirme os valores necessários. O template já aponta para o cluster MongoDB de testes (`Cluster0`) utilizado pela aplicação; ajuste apenas se for usar outro ambiente.
+2. Construa e suba os serviços:
+	```
+	docker compose up -d --build
+	```
+3. A API ficará disponível em `http://localhost:8080` (Swagger em `/swagger`). Consulte os logs com `docker compose logs -f api`.
+4. Para desligar os serviços:
+	```
+	docker compose down
+	```
+	Como o banco é remoto, não há volumes locais para limpar.
+
+## Pipeline CI/CD
+
+- Ferramenta: GitHub Actions (`.github/workflows/ci-cd.yml`).
+- Gatilhos principais: `pull_request` (build + testes), `push` na `main` (build/test + imagem + deploy em staging), tags `v*` (promove para produção) e `workflow_dispatch` manual.
+- Jobs:
+	- **Build & Test**: restaura, compila e executa `dotnet test` com cobertura, publicando artefatos.
+	- **Build & Push Docker Image**: monta a imagem com Docker Buildx e publica no GHCR (`ghcr.io/${owner}/${repo}`).
+	- **Deploy to Staging**: acessa o host via SSH e executa `docker compose pull/up` usando os arquivos remotos.
+	- **Deploy to Production**: fluxo semelhante, condicionado a tags `v*` e ao ambiente protegido `production`.
+- Secrets necessários:
+	- `REGISTRY_USERNAME` / `REGISTRY_PASSWORD`: credenciais para `docker login` (PAT com escopo `write:packages`).
+	- `STAGING_SSH_HOST`, `STAGING_SSH_USER`, `STAGING_SSH_KEY`, `STAGING_WORKDIR`.
+	- `PRODUCTION_SSH_HOST`, `PRODUCTION_SSH_USER`, `PRODUCTION_SSH_KEY`, `PRODUCTION_WORKDIR`.
+	- `STAGING_SMOKE_URL`, `PRODUCTION_SMOKE_URL`, `SMOKE_USERNAME`, `SMOKE_PASSWORD` (opcionalmente `STAGING_SMOKE_USERNAME`, etc. para credenciais distintas), `SMOKE_DEVICE_ID`, `SMOKE_ANDROID_ID`.
+- Pré-requisitos nos servidores: Docker + Docker Compose instalados, diretório (ex.: `/opt/softmind-api`) com `docker-compose.yml`, `.env.<ambiente>` e permissões para o usuário do deploy.
+- Auxílio: use `scripts/deploy/sync-compose.sh <ambiente>` para sincronizar `docker-compose.yml` e o arquivo `.env` (copiado de `deploy/<env>/.env.<env>.example`) para os servidores remotos.
+- Smoke tests: após cada deploy o workflow executa `scripts/smoke-tests.sh`, que valida login, verificação de token e consulta de alertas via HTTP. Execute localmente com:
+	```
+	SMOKE_BASE_URL=http://localhost:5000 \
+		SMOKE_USERNAME=softmind_mobile \
+		SMOKE_PASSWORD=SoftMind@2024!Secure#Pass$ \
+	./scripts/smoke-tests.sh
+	```
+
 
 ## Testes
 
@@ -99,33 +137,33 @@ reportgenerator \
 # Abra coveragereport/index.html no navegador
 ```
 
-## Configuração (appsettings)
+## Configuração (variáveis e appsettings)
 
-`SoftMindApi/appsettings.json`
-- ConnectionStrings
-	- ConnectionString: string de conexão MongoDB
-	- DatabaseName: nome do banco
-- Jwt
-	- Issuer, Audience, Key, ExpiryDays
-- ApiCredentials
-	- Username, Password (credenciais para login básico via `AuthService`)
+- `SoftMindApi/appsettings.json` mantém os valores de teste fornecidos pela equipe (cluster MongoDB hospedado no Atlas e credenciais de homologação). Para staging/produção, sobreponha os valores via variáveis de ambiente.
+- Copie `.env.example` para `.env` e preencha:
+	- `ConnectionStrings__ConnectionString` (string de conexão MongoDB)
+	- `ConnectionStrings__DatabaseName`
+	- `Jwt__Key`, `Jwt__Issuer`, `Jwt__Audience`, `Jwt__ExpiryDays`
+	- `ApiCredentials__Username`, `ApiCredentials__Password`
+- Durante o desenvolvimento, você pode exportar essas variáveis no shell ou usar o suporte nativo do `dotnet` (`dotnet user-secrets`) e do Docker Compose (`--env-file`).
+- Os valores padrão do template apontam para o cluster MongoDB de testes (`Cluster0`) e para as credenciais de homologação; altere-os quando for promover para outro ambiente.
 
-Exemplo (parcial):
+Exemplo (parcial) do `appsettings.json`:
 ```json
 {
 	"ConnectionStrings": {
-		"ConnectionString": "mongodb://localhost:27017",
-		"DatabaseName": "softmind"
+		"ConnectionString": "mongodb+srv://rm556212_db_user:NCqRkBCo86QUBL59@cluster0.mryolxz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+		"DatabaseName": "softMind"
 	},
 	"Jwt": {
-		"Issuer": "softmind",
-		"Audience": "softmind-clients",
-		"Key": "CHANGE_ME_SUPER_SECRET",
+		"Issuer": "SoftMindApi",
+		"Audience": "SoftMindApp",
+		"Key": "MinhaChaveJWT2024!Segura#Android$API@Secreta%2025&Forte*",
 		"ExpiryDays": 365
 	},
 	"ApiCredentials": {
-		"Username": "admin",
-		"Password": "admin123"
+		"Username": "softmind_mobile",
+		"Password": "SoftMind@2024!Secure#Pass$"
 	}
 }
 ```
