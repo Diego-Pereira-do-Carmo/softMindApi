@@ -98,6 +98,7 @@ Ambiente Development expõe Swagger em `/swagger`.
 	- `STAGING_SMOKE_URL`, `STAGING_SMOKE_USERNAME`, `STAGING_SMOKE_PASSWORD`, `STAGING_SMOKE_DEVICE_ID`.
 	- `PRODUCTION_SMOKE_URL`, `PRODUCTION_SMOKE_USERNAME`, `PRODUCTION_SMOKE_PASSWORD`, `PRODUCTION_SMOKE_DEVICE_ID`.
 	- `SMOKE_ANDROID_ID` (compartilhado entre ambientes ou configure versões específicas conforme necessário).
+- Os jobs de deploy são executados apenas quando o secret `STAGING_SSH_HOST` (ou `PRODUCTION_SSH_HOST`) estiver definido; isso permite testar build/test e publicação mesmo sem infraestrutura provisionada.
 - Pré-requisitos nos servidores: Docker + Docker Compose instalados, diretório (ex.: `/opt/softmind-api`) com `docker-compose.yml`, `.env.<ambiente>` e permissões para o usuário do deploy.
 - Auxílio: use `scripts/deploy/sync-compose.sh <ambiente>` para sincronizar `docker-compose.yml` e o arquivo `.env` (copiado de `deploy/<env>/.env.<env>.example`) para os servidores remotos.
 - Smoke tests: após cada deploy o workflow executa `scripts/smoke-tests.sh`, que valida login, verificação de token e consulta de alertas via HTTP. Execute localmente com:
