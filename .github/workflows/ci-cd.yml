@@ -40,7 +40,7 @@ jobs:
         run: dotnet build SoftMindApi.sln --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test SoftMindApi.Tests/SoftMindApi.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage"
+        run: dotnet test SoftMindApi.Tests/SoftMindApi.Tests.csproj --configuration Release --collect:"XPlat Code Coverage"
 
       - name: Publish test results
         if: always()
