@@ -12,6 +12,13 @@ RUN dotnet publish SoftMindApi/SoftMindApi.csproj -c Release -o /app/publish --n
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates tzdata curl \
+    && update-ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV TZ=America/Sao_Paulo
+
 WORKDIR /app
 
 COPY --from=build /app/publish .
