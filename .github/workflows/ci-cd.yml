@@ -93,14 +93,15 @@ jobs:
     name: Deploy to Staging
     needs: publish_docker
     runs-on: ubuntu-latest
-    if: ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch')
-      && secrets.STAGING_SSH_HOST != ''
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'workflow_dispatch'
     environment: staging
     steps:
       - name: Checkout
+        if: ${{ secrets.STAGING_SSH_HOST != '' }}
         uses: actions/checkout@v4
 
       - name: Deploy via SSH
+        if: ${{ secrets.STAGING_SSH_HOST != '' }}
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.STAGING_SSH_HOST }}
@@ -117,6 +118,7 @@ jobs:
             docker image prune -f
 
       - name: Smoke tests
+        if: ${{ secrets.STAGING_SSH_HOST != '' }}
         run: ./scripts/smoke-tests.sh
         env:
           SMOKE_BASE_URL: ${{ secrets.STAGING_SMOKE_URL }}
@@ -129,14 +131,15 @@ jobs:
     name: Deploy to Production
     needs: publish_docker
     runs-on: ubuntu-latest
-    if: ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || github.event_name == 'workflow_dispatch')
-      && secrets.PRODUCTION_SSH_HOST != ''
+    if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || github.event_name == 'workflow_dispatch'
     environment: production
     steps:
       - name: Checkout
+        if: ${{ secrets.PRODUCTION_SSH_HOST != '' }}
         uses: actions/checkout@v4
 
       - name: Deploy via SSH
+        if: ${{ secrets.PRODUCTION_SSH_HOST != '' }}
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.PRODUCTION_SSH_HOST }}
@@ -153,6 +156,7 @@ jobs:
             docker image prune -f
 
       - name: Smoke tests
+        if: ${{ secrets.PRODUCTION_SSH_HOST != '' }}
         run: ./scripts/smoke-tests.sh
         env:
           SMOKE_BASE_URL: ${{ secrets.PRODUCTION_SMOKE_URL }}
