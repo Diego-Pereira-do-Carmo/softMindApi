@@ -85,7 +85,7 @@ Ambiente Development expõe Swagger em `/swagger`.
 ## Pipeline CI/CD
 
 - Ferramenta: GitHub Actions (`.github/workflows/ci-cd.yml`).
-- Gatilhos principais: `pull_request` (build + testes), `push` na `main` (build/test + imagem + deploy em staging), tags `v*` (promove para produção) e `workflow_dispatch` manual.
+- Gatilhos principais: `pull_request` (build + testes), `push` na branch `master` (build/test + imagem + deploy em staging), tags `v*` (promove para produção) e `workflow_dispatch` manual.
 - Jobs:
 	- **Build & Test**: restaura, compila e executa `dotnet test` com cobertura, publicando artefatos.
 	- **Build & Push Docker Image**: monta a imagem com Docker Buildx e publica no GHCR (`ghcr.io/${owner}/${repo}`).
