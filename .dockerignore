@@ -1,0 +1,16 @@
+bin/
+obj/
+**/bin/
+**/obj/
+TestResults/
+SoftMindApi.Tests/TestResults/
+.vs/
+.vscode/
+.git/
+.gitignore
+.env
+*.user
+*.suo
+*.csproj.user
+*.db
+SoftMindApi.http

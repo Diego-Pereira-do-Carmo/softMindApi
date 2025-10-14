@@ -1,0 +1,162 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build_and_test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore SoftMindApi.sln
+
+      - name: Build
+        run: dotnet build SoftMindApi.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test SoftMindApi.Tests/SoftMindApi.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage"
+
+      - name: Publish test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: SoftMindApi.Tests/TestResults
+          if-no-files-found: ignore
+
+  publish_docker:
+    name: Build & Push Docker Image
+    needs: build_and_test
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v'))
+      || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy_staging:
+    name: Deploy to Staging
+    needs: publish_docker
+    runs-on: ubuntu-latest
+    if: ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch')
+      && secrets.STAGING_SSH_HOST != ''
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_SSH_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script_stop: true
+          command_timeout: 15m
+          script: |
+            set -euo pipefail
+            cd "${{ secrets.STAGING_WORKDIR }}"
+            docker login ${{ env.REGISTRY }} -u "${{ secrets.REGISTRY_USERNAME }}" -p "${{ secrets.REGISTRY_PASSWORD }}"
+            docker compose pull api
+            docker compose up -d api
+            docker image prune -f
+
+      - name: Smoke tests
+        run: ./scripts/smoke-tests.sh
+        env:
+          SMOKE_BASE_URL: ${{ secrets.STAGING_SMOKE_URL }}
+          SMOKE_USERNAME: ${{ secrets.STAGING_SMOKE_USERNAME }}
+          SMOKE_PASSWORD: ${{ secrets.STAGING_SMOKE_PASSWORD }}
+          SMOKE_DEVICE_ID: ${{ secrets.STAGING_SMOKE_DEVICE_ID }}
+          SMOKE_ANDROID_ID: ${{ secrets.SMOKE_ANDROID_ID }}
+
+  deploy_production:
+    name: Deploy to Production
+    needs: publish_docker
+    runs-on: ubuntu-latest
+    if: ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || github.event_name == 'workflow_dispatch')
+      && secrets.PRODUCTION_SSH_HOST != ''
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_SSH_HOST }}
+          username: ${{ secrets.PRODUCTION_SSH_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          script_stop: true
+          command_timeout: 15m
+          script: |
+            set -euo pipefail
+            cd "${{ secrets.PRODUCTION_WORKDIR }}"
+            docker login ${{ env.REGISTRY }} -u "${{ secrets.REGISTRY_USERNAME }}" -p "${{ secrets.REGISTRY_PASSWORD }}"
+            docker compose pull api
+            docker compose up -d api
+            docker image prune -f
+
+      - name: Smoke tests
+        run: ./scripts/smoke-tests.sh
+        env:
+          SMOKE_BASE_URL: ${{ secrets.PRODUCTION_SMOKE_URL }}
+          SMOKE_USERNAME: ${{ secrets.PRODUCTION_SMOKE_USERNAME }}
+          SMOKE_PASSWORD: ${{ secrets.PRODUCTION_SMOKE_PASSWORD }}
+          SMOKE_DEVICE_ID: ${{ secrets.PRODUCTION_SMOKE_DEVICE_ID }}
+          SMOKE_ANDROID_ID: ${{ secrets.SMOKE_ANDROID_ID }}
