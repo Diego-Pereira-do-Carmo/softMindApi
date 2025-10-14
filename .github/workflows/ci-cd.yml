@@ -93,70 +93,98 @@ jobs:
     name: Deploy to Staging
     needs: publish_docker
     runs-on: ubuntu-latest
-    if: ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch')
-      && secrets.STAGING_SSH_HOST != ''
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'workflow_dispatch'
     environment: staging
+    env:
+      STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+      STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+      STAGING_SSH_KEY:  ${{ secrets.STAGING_SSH_KEY }}
+      STAGING_WORKDIR:  ${{ secrets.STAGING_WORKDIR }}
+      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+      STAGING_SMOKE_URL: ${{ secrets.STAGING_SMOKE_URL }}
+      STAGING_SMOKE_USERNAME: ${{ secrets.STAGING_SMOKE_USERNAME }}
+      STAGING_SMOKE_PASSWORD: ${{ secrets.STAGING_SMOKE_PASSWORD }}
+      STAGING_SMOKE_DEVICE_ID: ${{ secrets.STAGING_SMOKE_DEVICE_ID }}
+      SMOKE_ANDROID_ID: ${{ secrets.SMOKE_ANDROID_ID }}
     steps:
       - name: Checkout
+        if: ${{ env.STAGING_SSH_HOST != '' }}
         uses: actions/checkout@v4
 
       - name: Deploy via SSH
+        if: ${{ env.STAGING_SSH_HOST != '' }}
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.STAGING_SSH_HOST }}
-          username: ${{ secrets.STAGING_SSH_USER }}
-          key: ${{ secrets.STAGING_SSH_KEY }}
+          host: ${{ env.STAGING_SSH_HOST }}
+          username: ${{ env.STAGING_SSH_USER }}
+          key: ${{ env.STAGING_SSH_KEY }}
           script_stop: true
           command_timeout: 15m
           script: |
             set -euo pipefail
-            cd "${{ secrets.STAGING_WORKDIR }}"
-            docker login ${{ env.REGISTRY }} -u "${{ secrets.REGISTRY_USERNAME }}" -p "${{ secrets.REGISTRY_PASSWORD }}"
+            cd "${{ env.STAGING_WORKDIR }}"
+            docker login ${{ env.REGISTRY }} -u "${{ env.REGISTRY_USERNAME }}" -p "${{ env.REGISTRY_PASSWORD }}"
             docker compose pull api
             docker compose up -d api
             docker image prune -f
 
       - name: Smoke tests
+        if: ${{ env.STAGING_SSH_HOST != '' }}
         run: ./scripts/smoke-tests.sh
         env:
-          SMOKE_BASE_URL: ${{ secrets.STAGING_SMOKE_URL }}
-          SMOKE_USERNAME: ${{ secrets.STAGING_SMOKE_USERNAME }}
-          SMOKE_PASSWORD: ${{ secrets.STAGING_SMOKE_PASSWORD }}
-          SMOKE_DEVICE_ID: ${{ secrets.STAGING_SMOKE_DEVICE_ID }}
-          SMOKE_ANDROID_ID: ${{ secrets.SMOKE_ANDROID_ID }}
+          SMOKE_BASE_URL: ${{ env.STAGING_SMOKE_URL }}
+          SMOKE_USERNAME: ${{ env.STAGING_SMOKE_USERNAME }}
+          SMOKE_PASSWORD: ${{ env.STAGING_SMOKE_PASSWORD }}
+          SMOKE_DEVICE_ID: ${{ env.STAGING_SMOKE_DEVICE_ID }}
+          SMOKE_ANDROID_ID: ${{ env.SMOKE_ANDROID_ID }}
 
   deploy_production:
     name: Deploy to Production
     needs: publish_docker
     runs-on: ubuntu-latest
-    if: ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || github.event_name == 'workflow_dispatch')
-      && secrets.PRODUCTION_SSH_HOST != ''
+    if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || github.event_name == 'workflow_dispatch'
     environment: production
+    env:
+      PRODUCTION_SSH_HOST: ${{ secrets.PRODUCTION_SSH_HOST }}
+      PRODUCTION_SSH_USER: ${{ secrets.PRODUCTION_SSH_USER }}
+      PRODUCTION_SSH_KEY:  ${{ secrets.PRODUCTION_SSH_KEY }}
+      PRODUCTION_WORKDIR:  ${{ secrets.PRODUCTION_WORKDIR }}
+      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+      PRODUCTION_SMOKE_URL: ${{ secrets.PRODUCTION_SMOKE_URL }}
+      PRODUCTION_SMOKE_USERNAME: ${{ secrets.PRODUCTION_SMOKE_USERNAME }}
+      PRODUCTION_SMOKE_PASSWORD: ${{ secrets.PRODUCTION_SMOKE_PASSWORD }}
+      PRODUCTION_SMOKE_DEVICE_ID: ${{ secrets.PRODUCTION_SMOKE_DEVICE_ID }}
+      SMOKE_ANDROID_ID: ${{ secrets.SMOKE_ANDROID_ID }}
     steps:
       - name: Checkout
+        if: ${{ env.PRODUCTION_SSH_HOST != '' }}
         uses: actions/checkout@v4
 
       - name: Deploy via SSH
+        if: ${{ env.PRODUCTION_SSH_HOST != '' }}
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.PRODUCTION_SSH_HOST }}
-          username: ${{ secrets.PRODUCTION_SSH_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          host: ${{ env.PRODUCTION_SSH_HOST }}
+          username: ${{ env.PRODUCTION_SSH_USER }}
+          key: ${{ env.PRODUCTION_SSH_KEY }}
           script_stop: true
           command_timeout: 15m
           script: |
             set -euo pipefail
-            cd "${{ secrets.PRODUCTION_WORKDIR }}"
-            docker login ${{ env.REGISTRY }} -u "${{ secrets.REGISTRY_USERNAME }}" -p "${{ secrets.REGISTRY_PASSWORD }}"
+            cd "${{ env.PRODUCTION_WORKDIR }}"
+            docker login ${{ env.REGISTRY }} -u "${{ env.REGISTRY_USERNAME }}" -p "${{ env.REGISTRY_PASSWORD }}"
             docker compose pull api
             docker compose up -d api
             docker image prune -f
 
       - name: Smoke tests
+        if: ${{ env.PRODUCTION_SSH_HOST != '' }}
         run: ./scripts/smoke-tests.sh
         env:
-          SMOKE_BASE_URL: ${{ secrets.PRODUCTION_SMOKE_URL }}
-          SMOKE_USERNAME: ${{ secrets.PRODUCTION_SMOKE_USERNAME }}
-          SMOKE_PASSWORD: ${{ secrets.PRODUCTION_SMOKE_PASSWORD }}
-          SMOKE_DEVICE_ID: ${{ secrets.PRODUCTION_SMOKE_DEVICE_ID }}
-          SMOKE_ANDROID_ID: ${{ secrets.SMOKE_ANDROID_ID }}
+          SMOKE_BASE_URL: ${{ env.PRODUCTION_SMOKE_URL }}
+          SMOKE_USERNAME: ${{ env.PRODUCTION_SMOKE_USERNAME }}
+          SMOKE_PASSWORD: ${{ env.PRODUCTION_SMOKE_PASSWORD }}
+          SMOKE_DEVICE_ID: ${{ env.PRODUCTION_SMOKE_DEVICE_ID }}
+          SMOKE_ANDROID_ID: ${{ env.SMOKE_ANDROID_ID }}
