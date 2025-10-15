@@ -300,3 +300,5 @@ SoftMindApi/
 ---
 
 Qualquer dúvida, abra uma issue ou PR.
+
+ALTERANDO O README.MD TESTE
